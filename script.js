@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const messageGateText   = document.getElementById('message-gate-text');
   const messageProceedBtn = document.getElementById('message-proceed-btn');
   const messageSecondLine = document.getElementById('message-second-line');
+  const birthdayText      = document.querySelector('.birthday-text');
 
   // ---- Canvas context ----
   const ctx    = cakeCanvas.getContext('2d');
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
       messageProceedBtn.style.display = 'none';
       messageGate.style.pointerEvents = 'none'; // let clicks reach the cake underneath
       if (messageGateInner) messageGateInner.style.background = 'transparent';
+      if (birthdayText) birthdayText.classList.add('visible');
       enterRevealedPhase();
     });
   }
