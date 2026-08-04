@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const messageProceedBtn = document.getElementById('message-proceed-btn');
   const messageSecondLine = document.getElementById('message-second-line');
   const birthdayText      = document.querySelector('.birthday-text');
+  const birthdayTextSecondary = document.querySelector('.birthday-text-secondary');
+  const happyBirthdayOverlay = document.getElementById('happy-birthday-overlay');
 
   // ---- Canvas context ----
   const ctx    = cakeCanvas.getContext('2d');
@@ -107,13 +109,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Music starts only after the user clicks proceed
   }
 
+  function showBirthdayText() {
+    if (birthdayText) birthdayText.classList.add('visible');
+    if (birthdayTextSecondary) birthdayTextSecondary.classList.add('visible');
+  }
+
+  function hideBirthdayText() {
+    if (birthdayText) birthdayText.classList.remove('visible');
+    if (birthdayTextSecondary) birthdayTextSecondary.classList.remove('visible');
+  }
+
+  function showHappyBirthdayOverlay() {
+    // Do not show the overlay on mobile devices
+    if (isMobile || !happyBirthdayOverlay) return;
+    happyBirthdayOverlay.classList.remove('hidden');
+  }
+
+  function hideHappyBirthdayOverlay() {
+    if (!happyBirthdayOverlay) return;
+    happyBirthdayOverlay.classList.add('hidden');
+  }
+
   if (messageProceedBtn) {
     messageProceedBtn.addEventListener('click', () => {
       messageGateText.style.display = 'none';
       messageProceedBtn.style.display = 'none';
       messageGate.style.pointerEvents = 'none'; // let clicks reach the cake underneath
       if (messageGateInner) messageGateInner.style.background = 'transparent';
-      if (birthdayText) birthdayText.classList.add('visible');
+      showBirthdayText();
       enterRevealedPhase();
     });
   }
@@ -312,6 +335,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let showHappyBirthday = false;
   let scrollX1 = 0;
   let scrollX2 = -80;
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  const cakeFlickerInterval = isMobile ? 250 : 150;
 
   // ==========================================================================
   // AUDIO
@@ -549,8 +574,8 @@ document.addEventListener('DOMContentLoaded', () => {
     flameTick++;
   }
 
-  // Animation Loop (6 FPS for authentic retro pixel flicker)
-  setInterval(renderPixelCake, 150);
+  // Animation Loop (slower on mobile for smoother performance)
+  setInterval(renderPixelCake, cakeFlickerInterval);
 
   // ==========================================================================
   // CAKE CLICK INTERACTION (only active after reveal)
@@ -569,17 +594,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (candles.every(c => !c.isLit)) {
         showHappyBirthday = true;
-        scrollX1 = 0;
-        scrollX2 = -200;
         playFanfare();
         playBackgroundMusic();
-        triggerBurstSparks();
+
+        if (!isMobile) {
+          // Desktop: existing full-screen overlay + sparks
+          showHappyBirthdayOverlay();
+          triggerBurstSparks();
+          hideBirthdayText();
+        } else {
+          // Mobile: show a single-line golden message under the cake that fits the screen
+          if (birthdayText) {
+            birthdayText.textContent = 'HAPPY BIRTHDAY';
+            birthdayText.style.display = 'block';
+            birthdayText.style.color = '#ffe600';
+            birthdayText.style.fontWeight = '800';
+            birthdayText.style.textAlign = 'center';
+            birthdayText.style.marginTop = '8px';
+            birthdayText.style.letterSpacing = '1px';
+            birthdayText.classList.add('visible');
+            // Fit text to screen width: approximate char width and compute px size
+            const chars = Math.max(1, birthdayText.textContent.length);
+            const sizePx = Math.max(12, Math.min(160, Math.floor(window.innerWidth / (chars * 0.55))));
+            birthdayText.style.fontSize = sizePx + 'px';
+          }
+          if (birthdayTextSecondary) {
+            birthdayTextSecondary.style.display = 'none';
+            birthdayTextSecondary.classList.remove('visible');
+          }
+        }
+
+        // Hide the message gate regardless of platform
         messageGate.style.display = 'none';
         messageGate.style.visibility = 'hidden';
         messageGate.classList.add('hidden');
       }
     }
   });
+
+  // Recompute mobile birthday text size on resize so it always fits
+  function adjustMobileBirthdaySize() {
+    if (!isMobile || !birthdayText || !birthdayText.classList.contains('visible')) return;
+    const chars = Math.max(1, birthdayText.textContent.length);
+    const sizePx = Math.max(12, Math.min(160, Math.floor(window.innerWidth / (chars * 0.55))));
+    birthdayText.style.fontSize = sizePx + 'px';
+  }
+  window.addEventListener('resize', adjustMobileBirthdaySize);
 
   // ==========================================================================
   // PIXEL SPARKS & FULL-WIDTH MARQUEE OVERLAY
@@ -593,14 +653,18 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', resizeSpCanvas);
   resizeSpCanvas();
 
+  // mobile marquee removed — no-op on resize beyond resizing canvas
+
   function triggerPixelSparks(x, y, count = 30) {
+    if (isMobile) return;
     const colors = ['#ff007f', '#ffe600', '#00f0ff', '#ffffff', '#b000ff'];
-    for (let i = 0; i < count; i++) {
+    const effectiveCount = count;
+    for (let i = 0; i < effectiveCount; i++) {
       sparks.push({
         x, y,
         vx: (Math.random() - 0.5) * 8,
         vy: (Math.random() - 0.5) * 8 - 2,
-        size: Math.floor(Math.random() * 4) + 4,
+        size: Math.floor(Math.random() * 4) + 3,
         color: colors[Math.floor(Math.random() * colors.length)],
         life: 1.0
       });
@@ -608,13 +672,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function triggerBurstSparks() {
+    if (isMobile) return;
     const cx = window.innerWidth  / 2;
     const cy = window.innerHeight / 2;
-    for (let b = 0; b < 4; b++) {
+    const burstCount = 4;
+    for (let b = 0; b < burstCount; b++) {
       setTimeout(() => {
         triggerPixelSparks(
           cx + (Math.random() - 0.5) * 300,
-          cy + (Math.random() - 0.5) * 200
+          cy + (Math.random() - 0.5) * 200,
+          18
         );
       }, b * 200);
     }
@@ -640,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ' ': ['000', '000', '000', '000', '000']
     };
 
-    const baseP = Math.max(2, Math.floor(window.innerWidth / 320));
+    const baseP = Math.max(2, Math.floor(window.innerWidth / (isMobile ? 420 : 320)));
 
     const rowSpecs = [
       { scaleMultiplier: 1.8, speed: 0.06,   dir: -1, gap: 14 },
@@ -671,7 +738,11 @@ document.addEventListener('DOMContentLoaded', () => {
       { fill: '#00ff66', shadow: '#00421a' }  // Bright Lime Green
     ];
 
-    while (currentY < window.innerHeight + 80 && rIdx < 25) {
+    const maxRows = isMobile ? 10 : 25;
+
+    // Mobile-specific marquee removed — desktop marquee only.
+
+    while (currentY < window.innerHeight + 80 && rIdx < maxRows) {
       const spec            = rowSpecs[rIdx % rowSpecs.length];
       const palette         = rowPalettes[rIdx % rowPalettes.length];
       const P               = Math.max(2, Math.round(baseP * spec.scaleMultiplier));
@@ -682,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (spec.dir < 0 && rowScrolls[rIdx] <= -unitWidth) rowScrolls[rIdx] += unitWidth;
       if (spec.dir > 0 && rowScrolls[rIdx] >= 0)          rowScrolls[rIdx] -= unitWidth;
 
-      const totalReps = Math.ceil(window.innerWidth / unitWidth) + 3;
+      const totalReps = Math.ceil(window.innerWidth / unitWidth) + (isMobile ? 1 : 3);
 
       for (let rep = -1; rep < totalReps; rep++) {
         let currentX = rowScrolls[rIdx] + rep * unitWidth;
@@ -717,26 +788,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function loopSparks() {
+  let lastSparkFrame = 0;
+
+  function loopSparks(timestamp) {
+    const frameInterval = 1000 / 30;
+    if (!lastSparkFrame) lastSparkFrame = timestamp;
+    if (timestamp - lastSparkFrame < frameInterval) {
+      requestAnimationFrame(loopSparks);
+      return;
+    }
+    lastSparkFrame = timestamp;
+
     spCtx.clearRect(0, 0, spCanvas.width, spCanvas.height);
 
     drawFullWidthMarquee();
 
-      // Efficient array cleanup from tail end
-      for (let idx = sparks.length - 1; idx >= 0; idx--) {
-        const s = sparks[idx];
-        s.x  += s.vx;
-        s.y  += s.vy;
-        s.vy += 0.2; // Gravity
-        s.life -= 0.03;
+    // Efficient array cleanup from tail end
+    for (let idx = sparks.length - 1; idx >= 0; idx--) {
+      const s = sparks[idx];
+      s.x  += s.vx;
+      s.y  += s.vy;
+      s.vy += isMobile ? 0.16 : 0.2; // Gravity
+      s.life -= isMobile ? 0.04 : 0.03;
 
-        spCtx.fillStyle = s.color;
-        spCtx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
+      spCtx.fillStyle = s.color;
+      spCtx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
 
-        if (s.life <= 0) sparks.splice(idx, 1);
-      }
-      requestAnimationFrame(loopSparks);
+      if (s.life <= 0) sparks.splice(idx, 1);
     }
+    requestAnimationFrame(loopSparks);
+  }
+  if (!isMobile) {
     loopSparks();
+  }
 
 });

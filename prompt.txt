@@ -1,30 +1,264 @@
-I have a birthday-cake web page (HTML/CSS/JS, vanilla, no framework) with a phase system: countdown → candle-gate (click 5 candles to light them) → message-phase (full-screen message overlay) → revealed (final cake).
+/* ==========================================================================
+   CENTERED STATIONARY ARCADE PIXEL ART CAKE - PURE MINIMALISM
+   ========================================================================== */
 
-**Bug:** After lighting all 5 candles, the message overlay (`#message-gate`, containing `#message-gate-text` and `#message-proceed-btn`) never visually appears. The page just shows the cake with lit candles — as if it skipped straight from candle-gate to revealed.
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
 
-**What I've checked and ruled out:**
-- `onCandleClick` correctly calls `setTimeout(enterMessagePhase, 900)` when the 5th candle is lit.
-- `enterMessagePhase()` removes the `hidden` class from `#message-gate` and resets `messageGateText`/`messageProceedBtn` inline `display` styles.
-- CSS: `.message-gate` is `position:fixed`, `z-index:99999`, `display:flex`, no ancestor has `transform`/`filter` that would break fixed positioning or create a clipping context.
-- No other element has a higher z-index at that point in the phase flow.
+html, body {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
 
-**What I need:** Help finding why `#message-gate` doesn't render/become visible even though its `hidden` class is removed. Possible angles: a JS error thrown earlier in the click handler chain that stops execution before the timeout fires, a stacking/paint issue specific to a browser, or something in the DOM/CSS I'm not seeing.
+/* Centered Stage Wrapper */
+.pixel-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 15;
+}
 
-I'll attach script.js, index.html, and style.css.
+.birthday-text {
+  display: none;
+  position: absolute;
+  top: min(16px, 4vh);
+  left: max(8px, env(safe-area-inset-left));
+  transform: translateX(-8px);
+  max-width: min(44vw, 180px);
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.78);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: clamp(12px, 3.2vw, 15px);
+  line-height: 1.3;
+  text-align: left;
+  pointer-events: none;
+  z-index: 20;
+}
 
----
+.birthday-text.visible {
+  display: block;
+}
 
-**Second bug:** During the candle-gate minigame, the clickable flame graphics (`.pixel-candle`, positioned via `CANDLE_DEFS` cx/cy as % of a 128-unit space) don't line up with where the flames actually render on the cake canvas once revealed. I already fixed `.pixel-candle` to scale its width/height with the cake canvas (`calc(7 * min(80vw,560px) / 128)` etc.) instead of a fixed 28x80px. But the `cy` values in `CANDLE_DEFS` were tuned assuming a fixed ~24px offset (label height + gap) above the candle canvas for the `translate(-50%,-50%)` centering — that offset doesn't scale with viewport, so alignment likely still drifts on smaller screens. Need a way to compute the anchor offset proportionally, or restructure the positioning so it doesn't depend on a fixed-pixel label+gap.
+@media (max-width: 768px) {
+  .birthday-text {
+    top: min(10px, 2vh);
+    left: max(8px, env(safe-area-inset-left));
+    transform: none;
+    max-width: min(70vw, 180px);
+  }
+}
 
----
+/* Crisp Retro Arcade Pixel Art Canvas */
+#pixel-cake-canvas {
+  width: min(80vw, 560px);
+  height: min(80vw, 560px);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 10px rgba(255, 0, 127, 0.25));
+  will-change: transform;
+  transition: transform 0.1s ease;
+}
 
-**Third task (behavior change, not a bug):** The welcome message overlay (`#message-gate`) should stay up until the user clicks "now blow the candles.", then let clicks pass through to the cake underneath so they can blow out candles one by one — but the overlay should only fully hide (`classList.add('hidden')`) once **all 5 candles are blown out**, not on a timer.
+#pixel-cake-canvas:hover {
+  transform: scale(1.02);
+}
 
-I've already wired the button side in `messageProceedBtn`'s click handler:
-```js
-messageGateText.style.display = 'none';
-messageProceedBtn.style.display = 'none';
-messageGate.style.pointerEvents = 'none'; // let clicks reach the cake underneath
-enterRevealedPhase();
-```
-Still need: add `messageGate.classList.add('hidden')` inside the `cakeCanvas` click handler's `candles.every(c => !c.isLit)` branch (where `showHappyBirthday`, `playFanfare()`, `triggerBurstSparks()` already fire), so the overlay disappears exactly when the last candle is blown out.
+#pixel-cake-canvas:active {
+  transform: scale(0.98);
+}
+
+
+/* Particle Sparks & Marquee Canvas Overlay (Behind Stage) */
+#sparkles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Countdown Lock Overlay */
+.lock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  z-index: 999999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ffffff;
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(6vw, 32px);
+  font-weight: bold;
+  text-align: center;
+  padding: 20px;
+}
+
+.lock-overlay.hidden {
+  display: none !important;
+}
+
+/* Candle Gate Overlay */
+.candle-gate {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  z-index: 99998;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.candle-gate.hidden {
+  display: none !important;
+}
+
+.candle-targets {
+  position: relative;
+  width: min(80vw, 560px);
+  height: min(80vw, 560px);
+}
+
+.candle-target {
+  position: absolute;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.4s ease;
+}
+
+.candle-target.target-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.candle-target .label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(2.8vw, 13px);
+  color: #888888;
+  white-space: nowrap;
+  transition: color 0.3s, opacity 0.3s;
+}
+
+.label-hidden {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.pixel-candle {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+@keyframes flicker {
+  from { box-shadow: 0 0 10px 3px #ffaa00, 0 0 3px 1px #ffffff; }
+  to   { box-shadow: 0 0 18px 7px #ff6600, 0 0 6px 2px #ffffff; }
+}
+
+/* Message Phase Overlay */
+.message-gate {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: transparent;
+  z-index: 99999;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  opacity: 1;
+  transition: opacity 1.2s ease;
+  pointer-events: auto;
+}
+
+.message-gate.fading-out {
+  opacity: 0;
+}
+
+.message-gate.hidden {
+  display: none !important;
+}
+
+.message-gate-inner {
+  width: 100%;
+  height: 100%;
+  padding: min(10vh, 80px) min(10vw, 80px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.82);
+  transition: background 0.5s ease;
+}
+
+.message-gate-text {
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(3.5vw, 16px);
+  color: #ffffff;
+  line-height: 1.9;
+  margin-bottom: 36px;
+  text-align: left;
+  pointer-events: auto;
+  max-width: 560px;
+}
+
+.message-proceed-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(3.5vw, 16px);
+  color: #ffffff;
+  cursor: pointer;
+  display: block;
+  text-align: left;
+  pointer-events: auto;
+ text-decoration: underline;
+}
+
+.message-second-line {
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(3.5vw, 16px);
+  color: #ffffff;
+  line-height: 1.9;
+  text-align: left;
+  margin-top: 36px;
+}
+
+.message-second-line.hidden {
+  display: none !important;
+}
