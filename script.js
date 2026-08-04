@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetDate = new Date(2026, 7, 6, 0, 0, 0);
 
   // Set to false to disable the countdown timer and jump straight to the candle gate.
-  const countdownEnabled = true;
+  const countdownEnabled = false;
 
   // ---- DOM refs ----
   const lockOverlay    = document.getElementById('lock-overlay');
@@ -41,6 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const birthdayText      = document.querySelector('.birthday-text');
   const birthdayTextSecondary = document.querySelector('.birthday-text-secondary');
   const happyBirthdayOverlay = document.getElementById('happy-birthday-overlay');
+
+  const hiddenTextContent = {
+    birthday: 'happy birthday, el.',
+    birthdaySecondary: '',
+    message: 'Everyone has a direction in life; some follow it and find joy, while others do not. But the most important thing is to believe in your heart. Trusting the direction you are heading as you walk forward is what makes your soul truly beautiful.',
+    proceed: 'proceed then click the candles'
+  };
+
+  if (birthdayText) birthdayText.textContent = hiddenTextContent.birthday;
+  if (birthdayTextSecondary) birthdayTextSecondary.textContent = hiddenTextContent.birthdaySecondary;
+  if (messageGateText) messageGateText.textContent = hiddenTextContent.message;
+  if (messageProceedBtn) messageProceedBtn.textContent = hiddenTextContent.proceed;
 
   // ---- Canvas context ----
   const ctx    = cakeCanvas.getContext('2d');
