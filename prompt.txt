@@ -1,0 +1,30 @@
+I have a birthday-cake web page (HTML/CSS/JS, vanilla, no framework) with a phase system: countdown → candle-gate (click 5 candles to light them) → message-phase (full-screen message overlay) → revealed (final cake).
+
+**Bug:** After lighting all 5 candles, the message overlay (`#message-gate`, containing `#message-gate-text` and `#message-proceed-btn`) never visually appears. The page just shows the cake with lit candles — as if it skipped straight from candle-gate to revealed.
+
+**What I've checked and ruled out:**
+- `onCandleClick` correctly calls `setTimeout(enterMessagePhase, 900)` when the 5th candle is lit.
+- `enterMessagePhase()` removes the `hidden` class from `#message-gate` and resets `messageGateText`/`messageProceedBtn` inline `display` styles.
+- CSS: `.message-gate` is `position:fixed`, `z-index:99999`, `display:flex`, no ancestor has `transform`/`filter` that would break fixed positioning or create a clipping context.
+- No other element has a higher z-index at that point in the phase flow.
+
+**What I need:** Help finding why `#message-gate` doesn't render/become visible even though its `hidden` class is removed. Possible angles: a JS error thrown earlier in the click handler chain that stops execution before the timeout fires, a stacking/paint issue specific to a browser, or something in the DOM/CSS I'm not seeing.
+
+I'll attach script.js, index.html, and style.css.
+
+---
+
+**Second bug:** During the candle-gate minigame, the clickable flame graphics (`.pixel-candle`, positioned via `CANDLE_DEFS` cx/cy as % of a 128-unit space) don't line up with where the flames actually render on the cake canvas once revealed. I already fixed `.pixel-candle` to scale its width/height with the cake canvas (`calc(7 * min(80vw,560px) / 128)` etc.) instead of a fixed 28x80px. But the `cy` values in `CANDLE_DEFS` were tuned assuming a fixed ~24px offset (label height + gap) above the candle canvas for the `translate(-50%,-50%)` centering — that offset doesn't scale with viewport, so alignment likely still drifts on smaller screens. Need a way to compute the anchor offset proportionally, or restructure the positioning so it doesn't depend on a fixed-pixel label+gap.
+
+---
+
+**Third task (behavior change, not a bug):** The welcome message overlay (`#message-gate`) should stay up until the user clicks "now blow the candles.", then let clicks pass through to the cake underneath so they can blow out candles one by one — but the overlay should only fully hide (`classList.add('hidden')`) once **all 5 candles are blown out**, not on a timer.
+
+I've already wired the button side in `messageProceedBtn`'s click handler:
+```js
+messageGateText.style.display = 'none';
+messageProceedBtn.style.display = 'none';
+messageGate.style.pointerEvents = 'none'; // let clicks reach the cake underneath
+enterRevealedPhase();
+```
+Still need: add `messageGate.classList.add('hidden')` inside the `cakeCanvas` click handler's `candles.every(c => !c.isLit)` branch (where `showHappyBirthday`, `playFanfare()`, `triggerBurstSparks()` already fire), so the overlay disappears exactly when the last candle is blown out.

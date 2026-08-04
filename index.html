@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Tab</title>
+  <link rel="stylesheet" href="style.css?v=20260804b">
+</head>
+<body>
+  <!-- Centered Pixel Art Canvas Stage -->
+  <div class="pixel-stage">
+    <canvas id="pixel-cake-canvas" width="128" height="128"></canvas>
+  </div>
+  
+  <!-- Background Music Audio Element -->
+  <audio id="bg-music" src="Sarah.mp3" loop></audio>
+
+  <!-- Canvas Overlay for Pixel Confetti / Sparks -->
+  <canvas id="sparkles-canvas"></canvas>
+
+  <!-- Countdown Lock Overlay (Disabled) -->
+  <div id="lock-overlay" class="lock-overlay hidden">
+    <div id="countdown-text" class="countdown-text"></div>
+  </div>
+
+  <!-- Candle Gate Overlay -->
+  <div id="candle-gate" class="candle-gate hidden">
+    <div id="candle-targets" class="candle-targets"></div>
+  </div>
+
+  <!-- Message Phase Overlay -->
+  <div id="message-gate" class="message-gate hidden">
+    <div class="message-gate-inner">
+      <p id="message-gate-text" class="message-gate-text">everyone has a direction in their life some does it and enjoy, and some dont. but the thing is to believe in your heart, the direction your pointing to while you walk ahead through. is what you believe that will make your soul happy. Happy Birthday.</p>
+      <button id="message-proceed-btn" class="message-proceed-btn">now blow the candles.</button>
+      <p id="message-second-line" class="message-second-line hidden"></p>
+    </div>
+  </div>
+
+  <script src="script.js?v=20260804b" defer></script>
+</body>
+</html>

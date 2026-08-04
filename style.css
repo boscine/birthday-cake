@@ -1,0 +1,231 @@
+/* ==========================================================================
+   CENTERED STATIONARY ARCADE PIXEL ART CAKE - PURE MINIMALISM
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Centered Stage Wrapper */
+.pixel-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 15;
+}
+
+/* Crisp Retro Arcade Pixel Art Canvas */
+#pixel-cake-canvas {
+  width: min(80vw, 560px);
+  height: min(80vw, 560px);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 10px rgba(255, 0, 127, 0.25));
+  will-change: transform;
+  transition: transform 0.1s ease;
+}
+
+#pixel-cake-canvas:hover {
+  transform: scale(1.02);
+}
+
+#pixel-cake-canvas:active {
+  transform: scale(0.98);
+}
+
+
+/* Particle Sparks & Marquee Canvas Overlay (Behind Stage) */
+#sparkles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Countdown Lock Overlay */
+.lock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  z-index: 999999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ffffff;
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(6vw, 32px);
+  font-weight: bold;
+  text-align: center;
+  padding: 20px;
+}
+
+.lock-overlay.hidden {
+  display: none !important;
+}
+
+/* Candle Gate Overlay */
+.candle-gate {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  z-index: 99998;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.candle-gate.hidden {
+  display: none !important;
+}
+
+.candle-targets {
+  position: relative;
+  width: min(80vw, 560px);
+  height: min(80vw, 560px);
+}
+
+.candle-target {
+  position: absolute;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.4s ease;
+}
+
+.candle-target.target-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.candle-target .label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(2.8vw, 13px);
+  color: #888888;
+  white-space: nowrap;
+  transition: color 0.3s, opacity 0.3s;
+}
+
+.label-hidden {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.pixel-candle {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+@keyframes flicker {
+  from { box-shadow: 0 0 10px 3px #ffaa00, 0 0 3px 1px #ffffff; }
+  to   { box-shadow: 0 0 18px 7px #ff6600, 0 0 6px 2px #ffffff; }
+}
+
+/* Message Phase Overlay */
+.message-gate {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: transparent;
+  z-index: 99999;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  opacity: 1;
+  transition: opacity 1.2s ease;
+  pointer-events: auto;
+}
+
+.message-gate.fading-out {
+  opacity: 0;
+}
+
+.message-gate.hidden {
+  display: none !important;
+}
+
+.message-gate-inner {
+  width: 100%;
+  height: 100%;
+  padding: min(10vh, 80px) min(10vw, 80px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.82);
+  transition: background 0.5s ease;
+}
+
+.message-gate-text {
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(3.5vw, 16px);
+  color: #ffffff;
+  line-height: 1.9;
+  margin-bottom: 36px;
+  text-align: left;
+  pointer-events: auto;
+  max-width: 560px;
+}
+
+.message-proceed-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(3.5vw, 16px);
+  color: #ffffff;
+  cursor: pointer;
+  display: block;
+  text-align: left;
+  pointer-events: auto;
+ text-decoration: underline;
+}
+
+.message-second-line {
+  font-family: monospace, 'Courier New', sans-serif;
+  font-size: min(3.5vw, 16px);
+  color: #ffffff;
+  line-height: 1.9;
+  text-align: left;
+  margin-top: 36px;
+}
+
+.message-second-line.hidden {
+  display: none !important;
+}
+
