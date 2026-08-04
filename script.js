@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetDate = new Date(2026, 7, 6, 0, 0, 0);
 
   // Set to false to disable the countdown timer and jump straight to the candle gate.
-  const countdownEnabled = false;
+  const countdownEnabled = true;
 
   // ---- DOM refs ----
   const lockOverlay    = document.getElementById('lock-overlay');
