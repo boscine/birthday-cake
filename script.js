@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Countdown target date for the birthday reveal.
   const targetDate = new Date(2026, 7, 6, 0, 0, 0);
 
+  // Set to false to disable the countdown timer and jump straight to the candle gate.
+  const countdownEnabled = false;
+
   // ---- DOM refs ----
   const lockOverlay    = document.getElementById('lock-overlay');
   const countdownText  = document.getElementById('countdown-text');
@@ -79,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
     candleGate.classList.add('hidden');       // remove candle gate overlay
     cakeCanvas.style.visibility = 'visible'; // show pixel cake
     triggerBurstSparks();                     // celebration sparks
-    playBackgroundMusic();                    // start music
   }
 
   // ── candle-gate → message-phase: full-screen message before reveal ───────
@@ -275,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (next) setTimeout(() => next.classList.remove('target-hidden'), 350);
 
     if (litCount === CANDLE_DEFS.length) {
+      playBackgroundMusic();
       setTimeout(enterMessagePhase, 900);
     }
   }
@@ -291,11 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
   //  causes a ReferenceError on CANDLE_DEFS and silently kills the whole script,
   //  leaving only the red body background visible.
   // ==========================================================================
-  enterCountdownPhase();                // ensure the countdown overlay is visible immediately
-  lockOverlay.style.display = 'flex';
-  lockOverlay.style.visibility = 'visible';
-  updateCountdown();                    // run once immediately to set initial phase
-  setInterval(updateCountdown, 1000);   // then poll every 1 s for countdown → gate transition
 
   // ==========================================================================
   // CAKE CANDLE STATE
@@ -389,6 +387,16 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       startChiptuneMusic();
     }
+  }
+
+  if (countdownEnabled) {
+    enterCountdownPhase();              // ensure the countdown overlay is visible immediately
+    lockOverlay.style.display = 'flex';
+    lockOverlay.style.visibility = 'visible';
+    updateCountdown();                  // run once immediately to set initial phase
+    setInterval(updateCountdown, 1000); // then poll every 1 s for countdown → gate transition
+  } else {
+    enterCandleGatePhase();
   }
 
   function playBlowSound() {
