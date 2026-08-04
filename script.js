@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const birthdayText      = document.querySelector('.birthday-text');
   const birthdayTextSecondary = document.querySelector('.birthday-text-secondary');
   const happyBirthdayOverlay = document.getElementById('happy-birthday-overlay');
+  const pcOnlyOverlay = document.getElementById('pc-only-overlay');
 
   const hiddenTextContent = {
     birthday: 'happy birthday, el.',
@@ -53,6 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (birthdayTextSecondary) birthdayTextSecondary.textContent = hiddenTextContent.birthdaySecondary;
   if (messageGateText) messageGateText.textContent = hiddenTextContent.message;
   if (messageProceedBtn) messageProceedBtn.textContent = hiddenTextContent.proceed;
+
+  const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768 || isTouchDevice;
+  const isDesktopExperience = !isMobile && !isTouchDevice;
+
+  if (!isDesktopExperience && pcOnlyOverlay) {
+    pcOnlyOverlay.classList.remove('hidden');
+    const titleElement = pcOnlyOverlay.querySelector('.pc-only-title');
+    const messageElement = pcOnlyOverlay.querySelector('.pc-only-message');
+    if (titleElement) titleElement.textContent = 'PC only';
+    if (messageElement) messageElement.textContent = 'This experience is only available on a desktop computer.';
+    return;
+  }
 
   // ---- Canvas context ----
   const ctx    = cakeCanvas.getContext('2d');
@@ -347,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let showHappyBirthday = false;
   let scrollX1 = 0;
   let scrollX2 = -80;
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
   const cakeFlickerInterval = isMobile ? 250 : 150;
 
   // ==========================================================================
