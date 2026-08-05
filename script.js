@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const birthdayText      = document.querySelector('.birthday-text');
   const birthdayTextSecondary = document.querySelector('.birthday-text-secondary');
   const happyBirthdayOverlay = document.getElementById('happy-birthday-overlay');
-  const pcOnlyOverlay = document.getElementById('pc-only-overlay');
 
   const hiddenTextContent = {
     birthday: 'happy birthday, el.',
@@ -55,11 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (messageGateText) messageGateText.textContent = hiddenTextContent.message;
   if (messageProceedBtn) messageProceedBtn.textContent = hiddenTextContent.proceed;
 
-  const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768 || isTouchDevice;
-  const isDesktopExperience = !isMobile && !isTouchDevice;
-
-  // Removed PC-only restriction: allow the experience on all devices.
+  // Device detection removed; experience runs on all devices.
 
   // ---- Canvas context ----
   const ctx    = cakeCanvas.getContext('2d');
@@ -139,8 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showHappyBirthdayOverlay() {
-    // Do not show the overlay on mobile devices
-    if (isMobile || !happyBirthdayOverlay) return;
+    if (!happyBirthdayOverlay) return;
     happyBirthdayOverlay.classList.remove('hidden');
   }
 
@@ -354,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let showHappyBirthday = false;
   let scrollX1 = 0;
   let scrollX2 = -80;
-  const cakeFlickerInterval = isMobile ? 250 : 150;
+  const cakeFlickerInterval = 150;
 
   // ==========================================================================
   // AUDIO
@@ -615,32 +609,9 @@ document.addEventListener('DOMContentLoaded', () => {
         playFanfare();
         playBackgroundMusic();
 
-        if (!isMobile) {
-          // Desktop: existing full-screen overlay + sparks
-          showHappyBirthdayOverlay();
-          triggerBurstSparks();
-          hideBirthdayText();
-        } else {
-          // Mobile: show a single-line golden message under the cake that fits the screen
-          if (birthdayText) {
-            birthdayText.textContent = 'HAPPY BIRTHDAY';
-            birthdayText.style.display = 'block';
-            birthdayText.style.color = '#ffe600';
-            birthdayText.style.fontWeight = '800';
-            birthdayText.style.textAlign = 'center';
-            birthdayText.style.marginTop = '8px';
-            birthdayText.style.letterSpacing = '1px';
-            birthdayText.classList.add('visible');
-            // Fit text to screen width: approximate char width and compute px size
-            const chars = Math.max(1, birthdayText.textContent.length);
-            const sizePx = Math.max(12, Math.min(160, Math.floor(window.innerWidth / (chars * 0.55))));
-            birthdayText.style.fontSize = sizePx + 'px';
-          }
-          if (birthdayTextSecondary) {
-            birthdayTextSecondary.style.display = 'none';
-            birthdayTextSecondary.classList.remove('visible');
-          }
-        }
+        showHappyBirthdayOverlay();
+        triggerBurstSparks();
+        hideBirthdayText();
 
         // Hide the message gate regardless of platform
         messageGate.style.display = 'none';
@@ -650,14 +621,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Recompute mobile birthday text size on resize so it always fits
-  function adjustMobileBirthdaySize() {
-    if (!isMobile || !birthdayText || !birthdayText.classList.contains('visible')) return;
-    const chars = Math.max(1, birthdayText.textContent.length);
-    const sizePx = Math.max(12, Math.min(160, Math.floor(window.innerWidth / (chars * 0.55))));
-    birthdayText.style.fontSize = sizePx + 'px';
-  }
-  window.addEventListener('resize', adjustMobileBirthdaySize);
 
   // ==========================================================================
   // PIXEL SPARKS & FULL-WIDTH MARQUEE OVERLAY
@@ -674,7 +637,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // mobile marquee removed — no-op on resize beyond resizing canvas
 
   function triggerPixelSparks(x, y, count = 30) {
-    if (isMobile) return;
     const colors = ['#ff007f', '#ffe600', '#00f0ff', '#ffffff', '#b000ff'];
     const effectiveCount = count;
     for (let i = 0; i < effectiveCount; i++) {
@@ -690,7 +652,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function triggerBurstSparks() {
-    if (isMobile) return;
     const cx = window.innerWidth  / 2;
     const cy = window.innerHeight / 2;
     const burstCount = 4;
@@ -725,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ' ': ['000', '000', '000', '000', '000']
     };
 
-    const baseP = Math.max(2, Math.floor(window.innerWidth / (isMobile ? 420 : 320)));
+    const baseP = Math.max(2, Math.floor(window.innerWidth / 320));
 
     const rowSpecs = [
       { scaleMultiplier: 1.8, speed: 0.06,   dir: -1, gap: 14 },
@@ -756,9 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { fill: '#00ff66', shadow: '#00421a' }  // Bright Lime Green
     ];
 
-    const maxRows = isMobile ? 10 : 25;
-
-    // Mobile-specific marquee removed — desktop marquee only.
+    const maxRows = 25;
 
     while (currentY < window.innerHeight + 80 && rIdx < maxRows) {
       const spec            = rowSpecs[rIdx % rowSpecs.length];
@@ -771,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (spec.dir < 0 && rowScrolls[rIdx] <= -unitWidth) rowScrolls[rIdx] += unitWidth;
       if (spec.dir > 0 && rowScrolls[rIdx] >= 0)          rowScrolls[rIdx] -= unitWidth;
 
-      const totalReps = Math.ceil(window.innerWidth / unitWidth) + (isMobile ? 1 : 3);
+      const totalReps = Math.ceil(window.innerWidth / unitWidth) + 3;
 
       for (let rep = -1; rep < totalReps; rep++) {
         let currentX = rowScrolls[rIdx] + rep * unitWidth;
@@ -826,8 +785,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const s = sparks[idx];
       s.x  += s.vx;
       s.y  += s.vy;
-      s.vy += isMobile ? 0.16 : 0.2; // Gravity
-      s.life -= isMobile ? 0.04 : 0.03;
+      s.vy += 0.2; // Gravity
+      s.life -= 0.03;
 
       spCtx.fillStyle = s.color;
       spCtx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
@@ -836,8 +795,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     requestAnimationFrame(loopSparks);
   }
-  if (!isMobile) {
-    loopSparks();
-  }
+  loopSparks();
 
 });
