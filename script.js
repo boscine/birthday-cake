@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const targetDate = new Date(2026, 7, 6, 0, 0, 0);
 
   // Set to false to disable the countdown timer and jump straight to the candle gate.
-  const countdownEnabled = true;
+  const countdownEnabled = false;
 
   // ---- DOM refs ----
   const lockOverlay    = document.getElementById('lock-overlay');
@@ -59,14 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMobile = /Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768 || isTouchDevice;
   const isDesktopExperience = !isMobile && !isTouchDevice;
 
-  if (!isDesktopExperience && pcOnlyOverlay) {
-    pcOnlyOverlay.classList.remove('hidden');
-    const titleElement = pcOnlyOverlay.querySelector('.pc-only-title');
-    const messageElement = pcOnlyOverlay.querySelector('.pc-only-message');
-    if (titleElement) titleElement.textContent = 'PC only';
-    if (messageElement) messageElement.textContent = 'This experience is only available on a desktop computer.';
-    return;
-  }
+  // Removed PC-only restriction: allow the experience on all devices.
 
   // ---- Canvas context ----
   const ctx    = cakeCanvas.getContext('2d');
